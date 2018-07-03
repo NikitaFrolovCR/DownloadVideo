@@ -31,9 +31,6 @@ import java.util.*
 
 class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, PlaybackPreparer {
 
-    companion object {
-    }
-
     private var trackSelector: DefaultTrackSelector? = null
     private var player: SimpleExoPlayer? = null
     private var debugViewHelper: DebugTextViewHelper? = null
@@ -96,56 +93,27 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
         }
     }
 
-    private inner class PlayerErrorMessageProvider : ErrorMessageProvider<ExoPlaybackException> {
-
-        @SuppressLint("StringFormatInvalid")
-        override fun getErrorMessage(e: ExoPlaybackException): Pair<Int, String> {
-            var errorString = getString(R.string.error_generic)
-            if (e.type == ExoPlaybackException.TYPE_RENDERER) {
-                val cause = e.rendererException
-                if (cause is MediaCodecRenderer.DecoderInitializationException) {
-                    // Special case for decoder initialization failures.
-                    if (cause.decoderName == null) {
-                        if (cause.cause is MediaCodecUtil.DecoderQueryException) {
-                            errorString = getString(R.string.error_querying_decoders)
-                        } else if (cause.secureDecoderRequired) {
-                            errorString = getString(R.string.error_no_secure_decoder, cause.mimeType)
-                        } else {
-                            errorString = getString(R.string.error_no_decoder, cause.mimeType)
-                        }
-                    } else {
-                        errorString = getString(R.string.error_instantiating_decoder, cause.decoderName)
-                    }
-                }
-            }
-            return Pair.create(0, errorString)
-        }
-    }
-
-
     private fun initializePlayer() {
 
         val uri = Uri.parse("https://storage.googleapis.com/wvmedia/clear/h264/tears/tears.mpd")
+        val uuid = Util.getDrmUuid("widevine")
+        val licenseUrl = ""
 
-        if (Util.maybeRequestReadExternalStoragePermission(this, uri)) {
-            // The player will be reinitialized if the permission is granted.
-            return
-        }
-
-        val drmSessionManager = buildDrmSessionManagerV18(
-                Util.getDrmUuid("widevine"),
-                "", null, false)
-
-
-        val trackSelectionFactory = AdaptiveTrackSelection.Factory(DefaultBandwidthMeter())
+        val licenseDataSourceFactory = (application as DemoApplication).buildHttpDataSourceFactory(null)
+        val drmSessionManager = DefaultDrmSessionManager(
+                uuid,
+                FrameworkMediaDrm.newInstance(uuid),
+                HttpMediaDrmCallback(licenseUrl, licenseDataSourceFactory),
+                null, false)
 
 
-        val renderersFactory = DefaultRenderersFactory(this, DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
 
-        trackSelector = DefaultTrackSelector(trackSelectionFactory)
+        trackSelector = DefaultTrackSelector(AdaptiveTrackSelection.Factory(DefaultBandwidthMeter()))
         trackSelector?.parameters = DefaultTrackSelector.ParametersBuilder().build()
 
-        player = ExoPlayerFactory.newSimpleInstance(renderersFactory, trackSelector, drmSessionManager)
+        player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this,
+                DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON),
+                trackSelector, drmSessionManager)
         player?.addAnalyticsListener(EventLogger(trackSelector))
         playerView.player = player
         playerView.setPlaybackPreparer(this)
@@ -165,21 +133,15 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
         player?.prepare(mediaSource, false, false)
     }
 
-    @Throws(UnsupportedDrmException::class)
-    private fun buildDrmSessionManagerV18(
-            uuid: UUID, licenseUrl: String, keyRequestPropertiesArray: Array<String>?, multiSession: Boolean): DefaultDrmSessionManager<FrameworkMediaCrypto> {
-        val licenseDataSourceFactory = (application as DemoApplication).buildHttpDataSourceFactory(/* listener= */null)
-        val drmCallback = HttpMediaDrmCallback(licenseUrl, licenseDataSourceFactory)
-        if (keyRequestPropertiesArray != null) {
-            var i = 0
-            while (i < keyRequestPropertiesArray.size - 1) {
-                drmCallback.setKeyRequestProperty(keyRequestPropertiesArray[i],
-                        keyRequestPropertiesArray[i + 1])
-                i += 2
-            }
+    private fun releasePlayer() {
+        if (player != null) {
+            debugViewHelper?.stop()
+            debugViewHelper = null
+            player?.release()
+            player = null
+            mediaSource = null
+            trackSelector = null
         }
-        return DefaultDrmSessionManager(
-                uuid, FrameworkMediaDrm.newInstance(uuid), drmCallback, null, multiSession)
     }
 
     private fun getOfflineStreamKeys(uri: Uri): List<RepresentationKey>? {
@@ -191,14 +153,27 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
                 .buildDataSourceFactory(if (useBandwidthMeter) DefaultBandwidthMeter() else null)
     }
 
-    private fun releasePlayer() {
-        if (player != null) {
-            debugViewHelper?.stop()
-            debugViewHelper = null
-            player?.release()
-            player = null
-            mediaSource = null
-            trackSelector = null
+    private inner class PlayerErrorMessageProvider : ErrorMessageProvider<ExoPlaybackException> {
+
+        @SuppressLint("StringFormatInvalid")
+        override fun getErrorMessage(e: ExoPlaybackException): Pair<Int, String> {
+            var errorString = getString(R.string.error_generic)
+            if (e.type == ExoPlaybackException.TYPE_RENDERER) {
+                val cause = e.rendererException
+                if (cause is MediaCodecRenderer.DecoderInitializationException) {
+                    // Special case for decoder initialization failures.
+                    errorString = if (cause.decoderName == null) {
+                        when {
+                            cause.cause is MediaCodecUtil.DecoderQueryException -> getString(R.string.error_querying_decoders)
+                            cause.secureDecoderRequired -> getString(R.string.error_no_secure_decoder, cause.mimeType)
+                            else -> getString(R.string.error_no_decoder, cause.mimeType)
+                        }
+                    } else {
+                        getString(R.string.error_instantiating_decoder, cause.decoderName)
+                    }
+                }
+            }
+            return Pair.create(0, errorString)
         }
     }
 

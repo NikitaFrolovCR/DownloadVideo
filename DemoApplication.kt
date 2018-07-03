@@ -18,6 +18,8 @@ public class DemoApplication : Application() {
         private val DOWNLOAD_TRACKER_ACTION_FILE = "tracked_actions"
         val DOWNLOAD_CONTENT_DIRECTORY = "downloads"
         private val MAX_SIMULTANEOUS_DOWNLOADS = 2
+        private const val USER_AGENT = "BlockBuster - Android"
+        private const val USER_AGENT_1 = "ExoPlayerDemo"
 
     }
 
@@ -29,7 +31,7 @@ public class DemoApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
-        userAgent = Util.getUserAgent(this, "ExoPlayerDemo")
+        userAgent = Util.getUserAgent(this, USER_AGENT)
     }
 
     fun getDownloadManager(): DownloadManager? {

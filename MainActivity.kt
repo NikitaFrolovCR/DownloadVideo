@@ -37,6 +37,20 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
     private var mediaDataSourceFactory: DataSource.Factory? = null
     private var mediaSource: MediaSource? = null
 
+    companion object {
+
+        private val URI = Uri.parse("https://link.theplatform.eu/s/jGxigC/DO_0HEeyJy0D?token=Aypf0xzQ6hiAEwn0ffqK8bDIIED8kGCG")
+        private val URI_1 = Uri.parse("https://storage.googleapis.com/wvmedia/cenc/h264/tears/tears.mpd")
+        private val URI_2 = Uri.parse("https://unified.cdn.bbaws.net/i/410/4/DI_0419_orig.ism/master.m3u8?filter=type!%3D%22audio%22%7C%7Cchannels%3E%3D2")
+
+        private val UUID = Util.getDrmUuid("widevine")
+
+        private val LICENSE_URL_2 = "https://widevine.entitlement.theplatform.eu/wv/web/ModularDrm?form=json&schema=1.0&account=http://access.auth.theplatform.com/data/Account/2693468579&token=Aypf0xzQ6hiAEwn0ffqK8bDIIED8kGCG"
+        private val LICENSE_URL_1 = "https://proxy.uat.widevine.com/proxy?video_id=48fcc369939ac96c&provider=widevine_test"
+        private val LICENSE_URL = ""
+
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -95,15 +109,11 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
 
     private fun initializePlayer() {
 
-        val uri = Uri.parse("https://storage.googleapis.com/wvmedia/clear/h264/tears/tears.mpd")
-        val uuid = Util.getDrmUuid("widevine")
-        val licenseUrl = ""
-
         val licenseDataSourceFactory = (application as DemoApplication).buildHttpDataSourceFactory(null)
         val drmSessionManager = DefaultDrmSessionManager(
-                uuid,
-                FrameworkMediaDrm.newInstance(uuid),
-                HttpMediaDrmCallback(licenseUrl, licenseDataSourceFactory),
+                UUID,
+                FrameworkMediaDrm.newInstance(UUID),
+                HttpMediaDrmCallback(LICENSE_URL, licenseDataSourceFactory),
                 null, false)
 
 
@@ -126,8 +136,8 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
                 buildDataSourceFactory(false))
                 .setManifestParser(
                         FilteringManifestParser<DashManifest, RepresentationKey>(
-                                DashManifestParser(), getOfflineStreamKeys(uri) as List<RepresentationKey>))
-                .createMediaSource(uri)
+                                DashManifestParser(), getOfflineStreamKeys(URI) as List<RepresentationKey>))
+                .createMediaSource(URI)
 
 
         player?.prepare(mediaSource, false, false)

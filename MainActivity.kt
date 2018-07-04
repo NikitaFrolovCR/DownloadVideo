@@ -45,9 +45,9 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
 
         private val UUID = Util.getDrmUuid("widevine")
 
-        private val LICENSE_URL_2 = "https://widevine.entitlement.theplatform.eu/wv/web/ModularDrm?form=json&schema=1.0&account=http://access.auth.theplatform.com/data/Account/2693468579&token=Aypf0xzQ6hiAEwn0ffqK8bDIIED8kGCG"
+        private val LICENSE_URL = "https://widevine.entitlement.theplatform.eu/wv/web/ModularDrm?form=json&schema=1.0&account=http://access.auth.theplatform.com/data/Account/2693468579&token=Aypf0xzQ6hiAEwn0ffqK8bDIIED8kGCG"
         private val LICENSE_URL_1 = "https://proxy.uat.widevine.com/proxy?video_id=48fcc369939ac96c&provider=widevine_test"
-        private val LICENSE_URL = ""
+        private val LICENSE_URL_2 = ""
 
     }
 
@@ -110,10 +110,14 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
     private fun initializePlayer() {
 
         val licenseDataSourceFactory = (application as DemoApplication).buildHttpDataSourceFactory(null)
+//        val callback = HttpMediaDrmCallback(LICENSE_URL, licenseDataSourceFactory)
+//        OfflineLicenseHelper.newWidevineInstance(LICENSE_URL, licenseDataSourceFactory)
+
+        val callback = MPXHttpMediaDrmCallback(LICENSE_URL, licenseDataSourceFactory, "DO_0HEeyJy0D")
         val drmSessionManager = DefaultDrmSessionManager(
                 UUID,
                 FrameworkMediaDrm.newInstance(UUID),
-                HttpMediaDrmCallback(LICENSE_URL, licenseDataSourceFactory),
+                callback,
                 null, false)
 
 

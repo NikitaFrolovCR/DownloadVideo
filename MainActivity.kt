@@ -115,51 +115,71 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
 
         val licenseDataSourceFactory = (application as DemoApplication).buildHttpDataSourceFactory(null)
 //        val callback = HttpMediaDrmCallback(LICENSE_URL, licenseDataSourceFactory)
-//        val offlineLicenseHelper = OfflineLicenseHelper.newWidevineInstance(LICENSE_URL, licenseDataSourceFactory)
+
 
         val callback = MPXHttpMediaDrmCallback(LICENSE_URL, licenseDataSourceFactory, "DO_0HEeyJy0D")
 
-//        val drmSessionManager = DefaultDrmSessionManager(
-//                UUID,
-//                FrameworkMediaDrm.newInstance(UUID),
-//                callback,
-//                null, false)
-
-
-
-        val drmSessionManager = OfflineDrmSessionManager.newFrameworkInstance(
+        val mediaDrm = FrameworkMediaDrm.newInstance(UUID)
+        val drmSessionManager = DefaultDrmSessionManager(
                 UUID,
+                mediaDrm,
                 callback,
-                null,
-                Handler(),
-                null,
-                true,
-                getExternalFilesDir(null).toString()
-                )
+                null, false)
 
-        trackSelector = DefaultTrackSelector(AdaptiveTrackSelection.Factory(DefaultBandwidthMeter()))
-        trackSelector?.parameters = DefaultTrackSelector.ParametersBuilder().build()
+        val offlineLicenseHelper = OfflineLicenseHelper(UUID, mediaDrm, callback, null)
 
-        player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this,
-                DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON),
-                trackSelector, drmSessionManager)
-        player?.addAnalyticsListener(EventLogger(trackSelector))
-        playerView.player = player
-        playerView.setPlaybackPreparer(this)
-        debugViewHelper = DebugTextViewHelper(player, debugTextView)
-        debugViewHelper?.start()
+        val dataSource = licenseDataSourceFactory.createDataSource()
+
+        Flowable.fromCallable { URI }
+                .map { DashUtil.loadManifest(dataSource, it).getPeriod(0) }
+                .map { DashUtil.loadDrmInitData(dataSource, it) }
+                .map { offlineLicenseHelper.downloadLicense(it) }
+                .compose { ioToMain(it) }
+                .subscribe {
+
+                    drmSessionManager.setMode(DefaultDrmSessionManager.MODE_DOWNLOAD, it)
 
 
-        mediaSource = DashMediaSource.Factory(
-                DefaultDashChunkSource.Factory(mediaDataSourceFactory),
-                buildDataSourceFactory(false))
-                .setManifestParser(
-                        FilteringManifestParser<DashManifest, RepresentationKey>(
-                                DashManifestParser(), getOfflineStreamKeys(URI) as List<RepresentationKey>))
-                .createMediaSource(URI)
+                    trackSelector = DefaultTrackSelector(AdaptiveTrackSelection.Factory(DefaultBandwidthMeter()))
+                    trackSelector?.parameters = DefaultTrackSelector.ParametersBuilder().build()
+
+                    player = ExoPlayerFactory.newSimpleInstance(DefaultRenderersFactory(this,
+                            DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON),
+                            trackSelector, drmSessionManager)
+                    player?.addAnalyticsListener(EventLogger(trackSelector))
+                    playerView.player = player
+                    playerView.setPlaybackPreparer(this)
+                    debugViewHelper = DebugTextViewHelper(player, debugTextView)
+                    debugViewHelper?.start()
 
 
-        player?.prepare(mediaSource, false, false)
+                    mediaSource = DashMediaSource.Factory(
+                            DefaultDashChunkSource.Factory(mediaDataSourceFactory),
+                            buildDataSourceFactory(false))
+                            .setManifestParser(
+                                    FilteringManifestParser<DashManifest, RepresentationKey>(
+                                            DashManifestParser(), getOfflineStreamKeys(URI) as List<RepresentationKey>))
+                            .createMediaSource(URI)
+
+
+
+                    player?.prepare(mediaSource)
+
+                }
+
+
+//
+//        val drmSessionManager = OfflineDrmSessionManager.newFrameworkInstance(
+//                UUID,
+//                callback,
+//                null,
+//                Handler(),
+//                null,
+//                true,
+//                getExternalFilesDir(null).toString() + "/files"
+//                )
+
+
     }
 
 //    val dataSource = licenseDataSourceFactory.createDataSource()

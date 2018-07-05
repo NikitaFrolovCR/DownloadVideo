@@ -114,12 +114,13 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
     private fun initializePlayer() {
 
         val licenseDataSourceFactory = (application as DemoApplication).buildHttpDataSourceFactory(null)
-//        val callback = HttpMediaDrmCallback(LICENSE_URL, licenseDataSourceFactory)
-
 
         val callback = MPXHttpMediaDrmCallback(LICENSE_URL, licenseDataSourceFactory, "DO_0HEeyJy0D")
 
         val mediaDrm = FrameworkMediaDrm.newInstance(UUID)
+//        mediaDrm.createMediaCrypto()
+
+
         val drmSessionManager = DefaultDrmSessionManager(
                 UUID,
                 mediaDrm,
@@ -128,17 +129,19 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
 
         val offlineLicenseHelper = OfflineLicenseHelper(UUID, mediaDrm, callback, null)
 
-        val dataSource = licenseDataSourceFactory.createDataSource()
+
+//
+//        val dataSource = licenseDataSourceFactory.createDataSource()
 
         Flowable.fromCallable { URI }
-                .map { DashUtil.loadManifest(dataSource, it).getPeriod(0) }
-                .map { DashUtil.loadDrmInitData(dataSource, it) }
-                .map { offlineLicenseHelper.downloadLicense(it) }
+//                .map { DashUtil.loadManifest(dataSource, it).getPeriod(0) }
+//                .map { DashUtil.loadDrmInitData(dataSource, it) }
+//                .map { offlineLicenseHelper.downloadLicense(it) }
                 .compose { ioToMain(it) }
                 .subscribe {
 
-                    drmSessionManager.setMode(DefaultDrmSessionManager.MODE_DOWNLOAD, it)
 
+                    drmSessionManager.setMode(DefaultDrmSessionManager.MODE_DOWNLOAD, DemoApplication.userId)
 
                     trackSelector = DefaultTrackSelector(AdaptiveTrackSelection.Factory(DefaultBandwidthMeter()))
                     trackSelector?.parameters = DefaultTrackSelector.ParametersBuilder().build()
@@ -167,56 +170,7 @@ class MainActivity : AppCompatActivity(), PlayerControlView.VisibilityListener, 
 
                 }
 
-
-//
-//        val drmSessionManager = OfflineDrmSessionManager.newFrameworkInstance(
-//                UUID,
-//                callback,
-//                null,
-//                Handler(),
-//                null,
-//                true,
-//                getExternalFilesDir(null).toString() + "/files"
-//                )
-
-
     }
-
-//    val dataSource = licenseDataSourceFactory.createDataSource()
-
-//    Flowable.fromCallable { URI }
-//    .map { DashUtil.loadManifest(dataSource, it).getPeriod(0) }
-//    .map { DashUtil.loadDrmInitData(dataSource, it) }
-//    .map { offlineLicenseHelper.downloadLicense(it) }
-//    .compose { ioToMain(it) }
-//    .subscribe {
-//        drmSessionManager.setMode(DefaultDrmSessionManager.MODE_PLAYBACK, it)
-//
-//        trackSelector = DefaultTrackSelector(AdaptiveTrackSelection.Factory(DefaultBandwidthMeter()))
-//        trackSelector?.parameters = DefaultTrackSelector.ParametersBuilder().build()
-//
-//        player = ExoPlayerFactory.newSimpleInstance(
-//                DefaultRenderersFactory(this, DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON),
-//                trackSelector,
-//                drmSessionManager)
-//        player?.addAnalyticsListener(EventLogger(trackSelector))
-//        playerView.player = player
-//        playerView.setPlaybackPreparer(this)
-//        debugViewHelper = DebugTextViewHelper(player, debugTextView)
-//        debugViewHelper?.start()
-//
-//
-//        mediaSource = DashMediaSource.Factory(
-//                DefaultDashChunkSource.Factory(mediaDataSourceFactory),
-//                buildDataSourceFactory(false))
-//                .setManifestParser(
-//                        FilteringManifestParser<DashManifest, RepresentationKey>(
-//                                DashManifestParser(), getOfflineStreamKeys(URI) as List<RepresentationKey>))
-//                .createMediaSource(URI)
-//
-//
-//        player?.prepare(mediaSource, false, false)
-//    }
 
     private fun releasePlayer() {
         if (player != null) {

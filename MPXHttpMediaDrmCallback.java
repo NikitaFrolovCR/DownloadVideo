@@ -58,6 +58,7 @@ public class MPXHttpMediaDrmCallback implements MediaDrmCallback
     private byte[] executePost(String url, byte[] data)
             throws IOException
     {
+//        return Base64.decode("CAISewpKCiA2Nzk0OEYyMDY4REI4OTZEMDEwMDAwMDAwMDAwMDAwMBIgNjc5NDhGMjA2OERCODk2RDAxMDAwMDAwMDAwMDAwMDAaACACKAcSDQgBEAEYASgAMIDO2gMaFiADQhIKEGtjdGwAdqcAZ9sjPwAAAAAgrLv32QVQABog35ZVEU7rK0r3YueFzdBRMBLgHjrrJQasFStIoUaNF0w=", Base64.DEFAULT);
         JSONObject jsonRoot;
         try
         {
@@ -90,6 +91,7 @@ public class MPXHttpMediaDrmCallback implements MediaDrmCallback
             jsonObject = jsonObject.getJSONObject("getWidevineLicenseResponse");
 
             return Base64.decode(jsonObject.getString("license"), Base64.DEFAULT);
+
         }
         catch(JSONException e)
         {

@@ -10,7 +10,9 @@ import com.google.android.exoplayer2.util.Util
 
 
 /** A service for downloading media.  */
-class DemoDownloadService : DownloadService(FOREGROUND_NOTIFICATION_ID, DownloadService.DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL, CHANNEL_ID, R.string.exo_download_notification_channel_name) {
+class DemoDownloadService : DownloadService(FOREGROUND_NOTIFICATION_ID,
+        DownloadService.DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL,
+        CHANNEL_ID, R.string.exo_download_notification_channel_name) {
 
     override fun getDownloadManager(): DownloadManager? {
         return (application as DemoApplication).getDownloadManager()

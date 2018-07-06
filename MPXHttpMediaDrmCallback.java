@@ -23,31 +23,27 @@ import java.util.UUID;
  * Created by Hildegardo Noronha on 07/11/2016.
  */
 
-public class MPXHttpMediaDrmCallback implements MediaDrmCallback
-{
+public class MPXHttpMediaDrmCallback implements MediaDrmCallback {
     private final HttpDataSource.Factory dataSourceFactory;
     private final String defaultUrl, releasePid;
 
     /**
-     * @param defaultUrl The default license URL.
+     * @param defaultUrl        The default license URL.
      * @param dataSourceFactory A factory from which to obtain {@link HttpDataSource} instances.
      */
-    public MPXHttpMediaDrmCallback(String defaultUrl, HttpDataSource.Factory dataSourceFactory, String releasePid)
-    {
+    public MPXHttpMediaDrmCallback(String defaultUrl, HttpDataSource.Factory dataSourceFactory, String releasePid) {
         this.dataSourceFactory = dataSourceFactory;
         this.defaultUrl = defaultUrl;
         this.releasePid = releasePid;
     }
 
     @Override
-    public byte[] executeProvisionRequest(UUID uuid, ExoMediaDrm.ProvisionRequest request) throws IOException
-    {
+    public byte[] executeProvisionRequest(UUID uuid, ExoMediaDrm.ProvisionRequest request) {
         return null;
     }
 
     @Override
-    public byte[] executeKeyRequest(UUID uuid, ExoMediaDrm.KeyRequest request) throws Exception
-    {
+    public byte[] executeKeyRequest(UUID uuid, ExoMediaDrm.KeyRequest request) throws Exception {
         String url = request.getDefaultUrl();
         if (TextUtils.isEmpty(url))
             url = defaultUrl;
@@ -55,23 +51,17 @@ public class MPXHttpMediaDrmCallback implements MediaDrmCallback
         return executePost(url, request.getData());
     }
 
-    private byte[] executePost(String url, byte[] data)
-            throws IOException
-    {
-//        return Base64.decode("CAISewpKCiA2Nzk0OEYyMDY4REI4OTZEMDEwMDAwMDAwMDAwMDAwMBIgNjc5NDhGMjA2OERCODk2RDAxMDAwMDAwMDAwMDAwMDAaACACKAcSDQgBEAEYASgAMIDO2gMaFiADQhIKEGtjdGwAdqcAZ9sjPwAAAAAgrLv32QVQABog35ZVEU7rK0r3YueFzdBRMBLgHjrrJQasFStIoUaNF0w=", Base64.DEFAULT);
+    private byte[] executePost(String url, byte[] data) throws IOException {
         JSONObject jsonRoot;
-        try
-        {
-                JSONObject getWidevineLicense = new JSONObject();
+        try {
+            JSONObject getWidevineLicense = new JSONObject();
 
-                getWidevineLicense.put("releasePid", releasePid);
-                getWidevineLicense.put("widevineChallenge", new String(Base64.encodeToString(data, Base64.DEFAULT)));
+            getWidevineLicense.put("releasePid", releasePid);
+            getWidevineLicense.put("widevineChallenge", Base64.encodeToString(data, Base64.DEFAULT));
 
             jsonRoot = new JSONObject();
             jsonRoot.put("getWidevineLicense", getWidevineLicense);
-        }
-        catch(JSONException e)
-        {
+        } catch (JSONException e) {
             return null;
         }
 
@@ -79,10 +69,8 @@ public class MPXHttpMediaDrmCallback implements MediaDrmCallback
         dataSource.setRequestProperty("Content-Type", "application/json");
 
         DataSpec dataSpec = new DataSpec(Uri.parse(url), jsonRoot.toString().getBytes(), 0, 0, C.LENGTH_UNSET, null, DataSpec.FLAG_ALLOW_GZIP);
-        DataSourceInputStream inputStream = new DataSourceInputStream(dataSource, dataSpec);
 
-        try
-        {
+        try (DataSourceInputStream inputStream = new DataSourceInputStream(dataSource, dataSpec)) {
             byte[] bytes = Util.toByteArray(inputStream);
             String string = new String(bytes);
 
@@ -90,22 +78,15 @@ public class MPXHttpMediaDrmCallback implements MediaDrmCallback
 
             jsonObject = jsonObject.getJSONObject("getWidevineLicenseResponse");
 
-            return Base64.decode(jsonObject.getString("license"), Base64.DEFAULT);
+            String license = jsonObject.getString("license");
 
-        }
-        catch(JSONException e)
-        {
+            DemoApplication.Companion.setOfflineLicense(license);
+
+            return Base64.decode(license, Base64.DEFAULT);
+
+        } catch (JSONException | IOException e) {
             Log.e("", e.toString());
             return null;
-        }
-        catch(IOException e)
-        {
-            Log.e("", e.toString());
-            return null;
-        }
-        finally
-        {
-            inputStream.close();
         }
     }
 }

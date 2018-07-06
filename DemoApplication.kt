@@ -28,12 +28,13 @@ public class DemoApplication : Application() {
         private const val USER_AGENT = "BlockBuster - Android"
         private const val USER_AGENT_1 = "ExoPlayerDemo"
         private const val PREF_NAME = "pq_prefs.xml"
+        private const val OFFLINE_LICENSE_KEY_SET_ID = "OFFLINE_LICENSE"
         private const val OFFLINE_LICENSE = "OFFLINE_LICENSE"
 
         lateinit var prefs: SharedPreferences
 
-        var userId: ByteArray
-            get() = prefs.getString(OFFLINE_LICENSE, null)?.let {
+        var offlineLicenseKeySetId: ByteArray
+            get() = prefs.getString(OFFLINE_LICENSE_KEY_SET_ID, null)?.let {
                 val split = it.substring(1, it.length - 1).split(", ")
                 val array = ByteArray(split.size)
                 for (i in split.indices) {
@@ -42,7 +43,13 @@ public class DemoApplication : Application() {
                 array
             } ?: ByteArray(0)
             set(array) {
-                prefs.edit().putString(OFFLINE_LICENSE, Arrays.toString(array)).apply()
+                prefs.edit().putString(OFFLINE_LICENSE_KEY_SET_ID, Arrays.toString(array)).apply()
+            }
+
+        var offlineLicense: String
+            get() = prefs.getString(OFFLINE_LICENSE, "")
+            set(license) {
+                prefs.edit().putString(OFFLINE_LICENSE, license).apply()
             }
     }
 

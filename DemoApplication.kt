@@ -28,7 +28,7 @@ public class DemoApplication : Application() {
         private const val USER_AGENT = "BlockBuster - Android"
         private const val USER_AGENT_1 = "ExoPlayerDemo"
         private const val PREF_NAME = "pq_prefs.xml"
-        private const val OFFLINE_LICENSE_KEY_SET_ID = "OFFLINE_LICENSE"
+        private const val OFFLINE_LICENSE_KEY_SET_ID = "OFFLINE_LICENSE_KEY_SET_ID"
         private const val OFFLINE_LICENSE = "OFFLINE_LICENSE"
 
         lateinit var prefs: SharedPreferences

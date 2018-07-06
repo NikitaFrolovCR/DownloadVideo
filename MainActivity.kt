@@ -12,16 +12,18 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
 
-        val URI = Uri.parse("https://link.theplatform.eu/s/jGxigC/DO_0HEeyJy0D?token=Aypf0xzQ6hiAEwn0ffqK8bDIIED8kGCG")
+        val URI_3 = Uri.parse("https://link.theplatform.eu/s/jGxigC/DO_0HEeyJy0D?token=Aypf0xzQ6hiAEwn0ffqK8bDIIED8kGCG")
         val URI_1 = Uri.parse("https://storage.googleapis.com/wvmedia/cenc/h264/tears/tears.mpd")
         val URI_2 = Uri.parse("https://unified.cdn.bbaws.net/i/410/4/DI_0419_orig.ism/master.m3u8?filter=type!%3D%22audio%22%7C%7Cchannels%3E%3D2")
+        val URI = Uri.parse("https://link.theplatform.eu/s/jGxigC/yc5wVCZZ0kv0?token=-0RbPHnQWUQ4GJ3aLeoosaAoAED4oEAQ")
 
         val UUID = Util.getDrmUuid("widevine")
-        val REALISE_PID = "DO_0HEeyJy0D"
+        val REALISE_PID = "yc5wVCZZ0kv0"
 
-        val LICENSE_URL = "https://widevine.entitlement.theplatform.eu/wv/web/ModularDrm?form=json&schema=1.0&account=http://access.auth.theplatform.com/data/Account/2693468579&token=Aypf0xzQ6hiAEwn0ffqK8bDIIED8kGCG"
+        val LICENSE_URL_3 = "https://widevine.entitlement.theplatform.eu/wv/web/ModularDrm?form=json&schema=1.0&account=http://access.auth.theplatform.com/data/Account/2693468579&token=Aypf0xzQ6hiAEwn0ffqK8bDIIED8kGCG"
         val LICENSE_URL_1 = "https://proxy.uat.widevine.com/proxy?video_id=48fcc369939ac96c&provider=widevine_test"
         val LICENSE_URL_2 = ""
+        val LICENSE_URL = "https://widevine.entitlement.theplatform.eu/wv/web/ModularDrm?form=json&schema=1.0&account=http://access.auth.theplatform.com/data/Account/2693468579&token=-0RbPHnQWUQ4GJ3aLeoosaAoAED4oEAQ"
 
     }
 

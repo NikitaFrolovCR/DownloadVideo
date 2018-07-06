@@ -82,7 +82,7 @@ class PlayerActivity : AppCompatActivity() {
                 OfflineMediaDrmCallback(DemoApplication.offlineLicense),
                 null, false)
 
-        drmSessionManager.setMode(DefaultDrmSessionManager.MODE_DOWNLOAD, DemoApplication.offlineLicenseKeySetId)
+        drmSessionManager.setMode(DefaultDrmSessionManager.MODE_PLAYBACK, DemoApplication.offlineLicenseKeySetId)
 
         trackSelector = DefaultTrackSelector(AdaptiveTrackSelection.Factory(DefaultBandwidthMeter()))
         trackSelector?.parameters = DefaultTrackSelector.ParametersBuilder().build()
